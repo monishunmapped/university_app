@@ -1,0 +1,926 @@
+import { useState, useEffect, useRef } from "react";
+
+const COLORS = {
+  primary: "#2563EB",
+  primaryDark: "#1D4ED8",
+  accent: "#0EA5E9",
+  success: "#10B981",
+  warning: "#F59E0B",
+  danger: "#EF4444",
+  bg: "#F0F4FF",
+  card: "#FFFFFF",
+  sidebar: "#1E293B",
+  sidebarText: "#94A3B8",
+  sidebarActive: "#2563EB",
+};
+
+const mockUser = {
+  id: "STU-2024-0042",
+  name: "Aryan Sharma",
+  email: "aryan.sharma@university.edu",
+  course: "B.Tech Computer Science",
+  semester: "5th Semester",
+  cgpa: "8.7",
+  avatar: "AS",
+  department: "Engineering Block A",
+};
+
+const mockNetwork = [
+  { id: 1, name: "Priya Mehta", course: "B.Tech CS", mutuals: 12, avatar: "PM", status: "online", year: "5th Sem" },
+  { id: 2, name: "Rohan Gupta", course: "B.Tech ECE", mutuals: 8, avatar: "RG", status: "offline", year: "5th Sem" },
+  { id: 3, name: "Sneha Joshi", course: "MBA", mutuals: 5, avatar: "SJ", status: "online", year: "2nd Sem" },
+  { id: 4, name: "Karan Singh", course: "B.Tech CS", mutuals: 15, avatar: "KS", status: "away", year: "5th Sem" },
+  { id: 5, name: "Divya Nair", course: "B.Arch", mutuals: 3, avatar: "DN", status: "online", year: "3rd Sem" },
+  { id: 6, name: "Amit Patel", course: "B.Tech CS", mutuals: 20, avatar: "AP", status: "offline", year: "5th Sem" },
+];
+
+const mockPosts = [
+  { id: 1, author: "Priya Mehta", avatar: "PM", time: "2h ago", content: "Anyone have notes for Advanced Algorithms lecture 12? The mid-term is next week!", likes: 14, comments: 8, tag: "Study" },
+  { id: 2, author: "University", avatar: "U", time: "5h ago", content: "📢 Campus recruitment drive: Infosys, TCS, Wipro visiting next Friday. Register at the Placement Cell by Thursday.", likes: 89, comments: 32, tag: "Placement" },
+  { id: 3, author: "Karan Singh", avatar: "KS", time: "1d ago", content: "Study group for OS exam forming — meeting at Library Room 4, Saturday 10 AM. DM to join!", likes: 22, comments: 19, tag: "Study" },
+  { id: 4, author: "Tech Club", avatar: "TC", time: "2d ago", content: "Hackathon registrations are open! 24-hour event, prizes worth ₹50,000. Form a team of 3–4 and sign up.", likes: 67, comments: 41, tag: "Event" },
+];
+
+const campusLocations = [
+  { id: 1, name: "Main Gate", type: "Security", x: 50, y: 88, icon: "🛡️", desc: "24/7 security post. ID required." },
+  { id: 2, name: "Admin Block", type: "Admin", x: 50, y: 60, icon: "🏛️", desc: "Registrar, Accounts, Dean's office." },
+  { id: 3, name: "Engineering A", type: "Department", x: 22, y: 42, icon: "⚙️", desc: "CS, ECE, Mechanical departments." },
+  { id: 4, name: "Engineering B", type: "Department", x: 78, y: 42, icon: "🔬", desc: "Civil, Chemical, Biotech." },
+  { id: 5, name: "Library", type: "Facility", x: 50, y: 30, icon: "📚", desc: "Open 8 AM–10 PM. Wi-Fi available." },
+  { id: 6, name: "Cafeteria", type: "Facility", x: 30, y: 70, icon: "🍽️", desc: "Breakfast 7–9 AM, Lunch 12–2 PM." },
+  { id: 7, name: "Hostel Block", type: "Residential", x: 75, y: 72, icon: "🏠", desc: "Boys & Girls hostels. Warden on duty." },
+  { id: 8, name: "Sports Complex", type: "Facility", x: 20, y: 60, icon: "🏃", desc: "Gym, cricket ground, courts." },
+  { id: 9, name: "Medical Centre", type: "Health", x: 80, y: 60, icon: "🏥", desc: "Doctor available 9 AM–5 PM." },
+  { id: 10, name: "Placement Cell", type: "Career", x: 65, y: 28, icon: "💼", desc: "Career services & internships." },
+];
+
+const mockTimetable = [
+  { day: "Mon", slots: ["Data Structures (9–10)", "—", "DBMS Lab (12–2)", "—", "Communication (4–5)"] },
+  { day: "Tue", slots: ["Algorithms (9–10)", "Networks (10–11)", "—", "OS Lab (2–4)", "—"] },
+  { day: "Wed", slots: ["—", "DBMS (10–11)", "Algorithms (11–12)", "—", "Seminar (4–5)"] },
+  { day: "Thu", slots: ["Data Structures (9–10)", "—", "Networks Lab (12–2)", "OS (3–4)", "—"] },
+  { day: "Fri", slots: ["OS (9–10)", "Algorithms (10–11)", "—", "Project Work (2–4)", "—"] },
+];
+
+const mockAnnouncements = [
+  { id: 1, title: "Fee Payment Deadline", body: "Last date for semester fee: June 25, 2026.", type: "urgent", icon: "⚠️" },
+  { id: 2, title: "Mid-Term Exam Schedule", body: "Mid-terms from July 1–7. Hall tickets available on portal.", type: "exam", icon: "📝" },
+  { id: 3, title: "Library Book Return", body: "Return all books before June 20 to avoid fines.", type: "info", icon: "📚" },
+  { id: 4, title: "Sports Day Registration", body: "Annual sports day on June 28. Register by June 22.", type: "event", icon: "🏆" },
+];
+
+const mockResults = [
+  { subject: "Data Structures", internal: 28, external: 61, total: 89, grade: "A+" },
+  { subject: "Computer Networks", internal: 25, external: 57, total: 82, grade: "A" },
+  { subject: "DBMS", internal: 27, external: 58, total: 85, grade: "A" },
+  { subject: "Operating Systems", internal: 24, external: 53, total: 77, grade: "B+" },
+  { subject: "Algorithms", internal: 29, external: 62, total: 91, grade: "A+" },
+];
+
+const navItems = [
+  { id: "dashboard", icon: "ti-layout-dashboard", label: "Dashboard" },
+  { id: "campus", icon: "ti-map-2", label: "Campus Map" },
+  { id: "network", icon: "ti-users", label: "Network" },
+  { id: "social", icon: "ti-message-circle", label: "Social Feed" },
+  { id: "timetable", icon: "ti-calendar", label: "Timetable" },
+  { id: "results", icon: "ti-chart-bar", label: "Results" },
+  { id: "university", icon: "ti-building", label: "University" },
+];
+
+function Avatar({ initials, size = 36, color = "#2563EB", textColor = "#fff" }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      background: color, color: textColor,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontWeight: 500, fontSize: size * 0.35, flexShrink: 0,
+      userSelect: "none",
+    }}>{initials}</div>
+  );
+}
+
+function StatusDot({ status }) {
+  const c = { online: "#10B981", offline: "#94A3B8", away: "#F59E0B" };
+  return <span style={{ width: 8, height: 8, borderRadius: "50%", background: c[status] || c.offline, display: "inline-block" }} />;
+}
+
+function Badge({ label, color = "#EFF6FF", textColor = "#1D4ED8" }) {
+  return (
+    <span style={{ background: color, color: textColor, fontSize: 11, padding: "2px 8px", borderRadius: 12, fontWeight: 500 }}>
+      {label}
+    </span>
+  );
+}
+
+// ── SCREENS ──────────────────────────────────────────────────────────────────
+
+const JMI_LOGIN_URL = "https://mj.jmi.ac.in/";
+
+// JMI Logo as inline SVG — crescent, star, palm trees, open book, Arabic script
+function JmiLogo({ size = 90 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Outer circle ring */}
+      <circle cx="100" cy="108" r="78" stroke="#1a8a4a" strokeWidth="5" fill="none"/>
+      {/* Crescent moon */}
+      <path d="M42 108 C42 72 65 48 100 48 C78 55 68 78 68 108 C68 138 78 161 100 168 C65 168 42 144 42 108Z" fill="#1a8a4a"/>
+      {/* Star at top */}
+      <polygon points="100,12 104,24 117,24 107,32 111,44 100,36 89,44 93,32 83,24 96,24" fill="#1a8a4a"/>
+      {/* Star inner circle */}
+      <circle cx="100" cy="29" r="5" fill="white" opacity="0.6"/>
+      {/* Left palm tree trunk */}
+      <line x1="72" y1="90" x2="62" y2="50" stroke="#1a8a4a" strokeWidth="3"/>
+      {/* Left palm fronds */}
+      <path d="M62,50 C50,40 38,42 35,36 C45,38 55,42 62,50Z" fill="#1a8a4a"/>
+      <path d="M62,50 C58,36 62,24 58,20 C62,28 65,40 62,50Z" fill="#1a8a4a"/>
+      <path d="M62,50 C70,38 78,38 82,32 C76,38 68,44 62,50Z" fill="#1a8a4a"/>
+      {/* Right palm tree trunk */}
+      <line x1="128" y1="90" x2="138" y2="50" stroke="#1a8a4a" strokeWidth="3"/>
+      {/* Right palm fronds */}
+      <path d="M138,50 C150,40 162,42 165,36 C155,38 145,42 138,50Z" fill="#1a8a4a"/>
+      <path d="M138,50 C142,36 138,24 142,20 C138,28 135,40 138,50Z" fill="#1a8a4a"/>
+      <path d="M138,50 C130,38 122,38 118,32 C124,38 132,44 138,50Z" fill="#1a8a4a"/>
+      {/* Open book */}
+      <rect x="74" y="82" width="52" height="36" rx="2" fill="#f5f0e0" stroke="#1a8a4a" strokeWidth="2"/>
+      <line x1="100" y1="82" x2="100" y2="118" stroke="#1a8a4a" strokeWidth="1.5"/>
+      {/* Book lines (text representation) */}
+      <line x1="78" y1="91" x2="98" y2="91" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="78" y1="97" x2="98" y2="97" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="78" y1="103" x2="98" y2="103" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="78" y1="109" x2="98" y2="109" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="102" y1="91" x2="122" y2="91" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="102" y1="97" x2="122" y2="97" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="102" y1="103" x2="122" y2="103" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      <line x1="102" y1="109" x2="122" y2="109" stroke="#1a8a4a" strokeWidth="1" opacity="0.7"/>
+      {/* Bottom Arabic script arc (simplified decorative) */}
+      <path d="M42,148 Q100,175 158,148" stroke="#1a8a4a" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M50,158 Q100,182 150,158" stroke="#1a8a4a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function LoginScreen({ onLogin }) {
+  const [phase, setPhase] = useState("login"); // login | webview | success
+  const [showPass, setShowPass] = useState(false);
+  const iframeRef = useRef(null);
+  const pollRef = useRef(null);
+
+  const startPolling = () => {
+    pollRef.current = setInterval(() => {
+      try {
+        const url = iframeRef.current?.contentWindow?.location?.href || "";
+        if (url.includes("/auth/dashboard") || url.includes("dashboard")) {
+          clearInterval(pollRef.current);
+          setPhase("success");
+          setTimeout(() => onLogin(), 1400);
+        }
+      } catch (e) {}
+    }, 800);
+  };
+
+  useEffect(() => {
+    if (phase === "webview") startPolling();
+    return () => clearInterval(pollRef.current);
+  }, [phase]);
+
+  // ── SUCCESS ───────────────────────────────────────────────────────────────
+  if (phase === "success") return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(170deg, #0d4d2a 0%, #1a8a4a 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div style={{ width: 72, height: 72, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36 }}>✅</div>
+      <div style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>Login Successful</div>
+      <div style={{ color: "#a7f3d0", fontSize: 14 }}>Welcome to UniCampus…</div>
+      <div style={{ width: 220, height: 4, background: "rgba(255,255,255,0.2)", borderRadius: 4, overflow: "hidden", marginTop: 8 }}>
+        <div style={{ height: "100%", background: "#fff", borderRadius: 4, animation: "prog 1.4s ease forwards" }} />
+      </div>
+      <style>{`@keyframes prog{from{width:0%}to{width:100%}}`}</style>
+    </div>
+  );
+
+  // ── WEBVIEW ───────────────────────────────────────────────────────────────
+  if (phase === "webview") return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#0d4d2a" }}>
+      <div style={{ background: "#1a8a4a", padding: "0 16px", height: 50, display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <JmiLogo size={28} />
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>MyJamia Login</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.15)", borderRadius: 20, padding: "3px 10px" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ADE80", display: "inline-block" }} />
+          <span style={{ fontSize: 11, color: "#d1fae5" }}>mj.jmi.ac.in 🔒</span>
+        </div>
+        <button onClick={() => { clearInterval(pollRef.current); setPhase("login"); }}
+          style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 12, cursor: "pointer", padding: "5px 10px", borderRadius: 6 }}>
+          ✕ Back
+        </button>
+      </div>
+      <div style={{ background: "#0d5c33", padding: "5px 16px", flexShrink: 0 }}>
+        <span style={{ fontSize: 11, color: "#6ee7b7" }}>ℹ️ Sign in on JMI's official page — the app continues automatically once logged in.</span>
+      </div>
+      <iframe ref={iframeRef} src={JMI_LOGIN_URL} title="MyJamia"
+        style={{ flex: 1, width: "100%", border: "none", display: "block", minHeight: "calc(100vh - 88px)" }}
+        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-top-navigation"
+        onLoad={() => {
+          try {
+            const url = iframeRef.current?.contentWindow?.location?.href || "";
+            if (url.includes("/auth/dashboard")) { clearInterval(pollRef.current); setPhase("success"); setTimeout(() => onLogin(), 1400); }
+          } catch (e) {}
+        }}
+      />
+      <div style={{ background: "#0d5c33", padding: "6px 16px", textAlign: "center", flexShrink: 0 }}>
+        <span style={{ fontSize: 11, color: "#6ee7b7" }}>🔒 Credentials go directly to Jamia Millia Islamia's server</span>
+      </div>
+    </div>
+  );
+
+  // ── MAIN LOGIN SCREEN ─────────────────────────────────────────────────────
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(170deg, #0d4d2a 0%, #1a8a4a 60%, #22c55e 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", position: "relative", overflow: "hidden" }}>
+
+      {/* Decorative background circles matching logo green */}
+      <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: -80, left: -80, width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "30%", left: -40, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
+
+      {/* Header — JMI logo + name */}
+      <div style={{ textAlign: "center", marginBottom: 28, zIndex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+          <div style={{ width: 100, height: 100, borderRadius: "50%", background: "rgba(255,255,255,0.95)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+            <JmiLogo size={80} />
+          </div>
+        </div>
+        <h1 style={{ color: "#fff", fontSize: 20, fontWeight: 800, margin: "0 0 3px", letterSpacing: 0.3 }}>Jamia Millia Islamia</h1>
+        <p style={{ color: "#a7f3d0", fontSize: 13, margin: "0 0 2px" }}>A Central University</p>
+        <p style={{ color: "#6ee7b7", fontSize: 11, margin: 0 }}>NAAC Accredited A++ Grade · Est. 1920</p>
+      </div>
+
+      {/* Login card */}
+      <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: "28px 26px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", zIndex: 1 }}>
+        <div style={{ textAlign: "center", marginBottom: 22 }}>
+          <div style={{ display: "inline-block", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "4px 14px", marginBottom: 10 }}>
+            <span style={{ fontSize: 11, color: "#15803d", fontWeight: 600 }}>MyJamia Self Service Portal</span>
+          </div>
+          <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0d4d2a", margin: 0 }}>Student Sign In</h2>
+        </div>
+
+        {/* Student ID */}
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Student ID</label>
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 16 }}>👤</span>
+            <input
+              placeholder="Enter your JMI Student ID"
+              style={{ width: "100%", padding: "11px 14px 11px 36px", border: "1.5px solid #d1fae5", borderRadius: 10, fontSize: 14, outline: "none", boxSizing: "border-box", background: "#f9fffe", color: "#111827" }}
+              onFocus={e => { e.target.style.borderColor = "#1a8a4a"; e.target.style.boxShadow = "0 0 0 3px rgba(26,138,74,0.1)"; }}
+              onBlur={e => { e.target.style.borderColor = "#d1fae5"; e.target.style.boxShadow = "none"; }}
+            />
+          </div>
+        </div>
+
+        {/* Password */}
+        <div style={{ marginBottom: 8 }}>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Password</label>
+          <div style={{ position: "relative" }}>
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 16 }}>🔑</span>
+            <input
+              type={showPass ? "text" : "password"}
+              placeholder="Enter your password"
+              style={{ width: "100%", padding: "11px 40px 11px 36px", border: "1.5px solid #d1fae5", borderRadius: 10, fontSize: 14, outline: "none", boxSizing: "border-box", background: "#f9fffe", color: "#111827" }}
+              onFocus={e => { e.target.style.borderColor = "#1a8a4a"; e.target.style.boxShadow = "0 0 0 3px rgba(26,138,74,0.1)"; }}
+              onBlur={e => { e.target.style.borderColor = "#d1fae5"; e.target.style.boxShadow = "none"; }}
+            />
+            <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#6b7280", padding: 2 }}>
+              {showPass ? "🙈" : "👁️"}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ textAlign: "right", marginBottom: 18 }}>
+          <span style={{ fontSize: 12, color: "#1a8a4a", cursor: "pointer", fontWeight: 500 }}>Forgot password?</span>
+        </div>
+
+        {/* Sign In button — opens webview */}
+        <button onClick={() => setPhase("webview")}
+          style={{ width: "100%", padding: "13px", background: "linear-gradient(135deg, #1a8a4a 0%, #15803d 100%)", color: "#fff", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 14, letterSpacing: 0.3 }}>
+          Sign In to MyJamia
+        </button>
+
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+          <span style={{ fontSize: 12, color: "#9ca3af" }}>OR</span>
+          <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+        </div>
+
+        {/* ePramaan */}
+        <button onClick={() => setPhase("webview")}
+          style={{ width: "100%", padding: "11px", background: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: 12, fontSize: 13, fontWeight: 600, color: "#15803d", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <span style={{ fontSize: 16 }}>🇮🇳</span> Sign in with ePramaan
+        </button>
+
+        <p style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", marginTop: 16, marginBottom: 0, lineHeight: 1.5 }}>
+          🔒 Authentication handled securely by <strong style={{ color: "#6b7280" }}>mj.jmi.ac.in</strong>
+        </p>
+      </div>
+
+      {/* Footer */}
+      <p style={{ fontSize: 11, color: "#6ee7b7", textAlign: "center", marginTop: 20, zIndex: 1 }}>
+        MyJamia Self Service Portal · Designed & Developed by FTK-Centre for Information Technology, JMI
+      </p>
+    </div>
+  );
+}
+
+function Dashboard({ user }) {
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ background: `linear-gradient(135deg, ${COLORS.primary} 0%, #1D4ED8 100%)`, borderRadius: 16, padding: "20px 24px", marginBottom: 20, color: "#fff" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 600 }}>{user.avatar}</div>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Welcome back, {user.name.split(" ")[0]}!</h2>
+            <p style={{ margin: "2px 0 0", fontSize: 13, opacity: 0.85 }}>{user.course} · {user.semester} · {user.id}</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
+        {[
+          { label: "CGPA", value: user.cgpa, sub: "Current", color: "#EFF6FF", tc: "#1D4ED8", ic: "📊" },
+          { label: "Attendance", value: "82%", sub: "This semester", color: "#F0FDF4", tc: "#15803D", ic: "✅" },
+          { label: "Pending Fees", value: "₹12,000", sub: "Due June 25", color: "#FEF2F2", tc: "#B91C1C", ic: "💳" },
+          { label: "Assignments", value: "3 due", sub: "This week", color: "#FFFBEB", tc: "#B45309", ic: "📝" },
+        ].map(c => (
+          <div key={c.label} style={{ background: c.color, borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ fontSize: 20, marginBottom: 4 }}>{c.ic}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: c.tc }}>{c.value}</div>
+            <div style={{ fontSize: 12, color: c.tc, opacity: 0.75 }}>{c.label} · {c.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <h3 style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 10 }}>Today's Schedule</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+        {[
+          { time: "9–10 AM", subj: "Data Structures", room: "Rm 302", status: "done" },
+          { time: "10–11 AM", subj: "Computer Networks", room: "Rm 204", status: "current" },
+          { time: "12–2 PM", subj: "DBMS Lab", room: "Lab 1", status: "upcoming" },
+          { time: "4–5 PM", subj: "Communication Skills", room: "Rm 101", status: "upcoming" },
+        ].map(s => (
+          <div key={s.subj} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: s.status === "current" ? "#EFF6FF" : "#fff", border: `1.5px solid ${s.status === "current" ? COLORS.primary : "#E5E7EB"}`, borderRadius: 10 }}>
+            <div style={{ fontSize: 12, color: "#6B7280", width: 72, flexShrink: 0 }}>{s.time}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>{s.subj}</div>
+              <div style={{ fontSize: 12, color: "#6B7280" }}>{s.room}</div>
+            </div>
+            {s.status === "done" && <span style={{ fontSize: 12, color: "#6B7280" }}>Done</span>}
+            {s.status === "current" && <span style={{ fontSize: 11, background: COLORS.primary, color: "#fff", padding: "2px 8px", borderRadius: 12 }}>Now</span>}
+            {s.status === "upcoming" && <span style={{ fontSize: 12, color: "#9CA3AF" }}>Later</span>}
+          </div>
+        ))}
+      </div>
+
+      <h3 style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 10 }}>Announcements</h3>
+      {mockAnnouncements.slice(0, 3).map(a => (
+        <div key={a.id} style={{ display: "flex", gap: 12, padding: "12px 14px", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 10, marginBottom: 8 }}>
+          <span style={{ fontSize: 18 }}>{a.icon}</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{a.title}</div>
+            <div style={{ fontSize: 12, color: "#6B7280" }}>{a.body}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CampusMap() {
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState("All");
+  const types = ["All", "Security", "Department", "Facility", "Health", "Career", "Residential"];
+  const filtered = filter === "All" ? campusLocations : campusLocations.filter(l => l.type === filter);
+
+  return (
+    <div style={{ padding: 24 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>Campus Map</h2>
+      <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>Explore departments, facilities, and key locations</p>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+        {types.map(t => (
+          <button key={t} onClick={() => setFilter(t)}
+            style={{ padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 500, border: `1.5px solid ${filter === t ? COLORS.primary : "#E5E7EB"}`, background: filter === t ? COLORS.primary : "#fff", color: filter === t ? "#fff" : "#374151", cursor: "pointer" }}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ position: "relative", background: "#E8F0FE", borderRadius: 14, height: 340, marginBottom: 16, overflow: "hidden", border: "1.5px solid #C7D7F8" }}>
+        <div style={{ position: "absolute", inset: 0, opacity: 0.08 }}>
+          {[20, 40, 60, 80].map(y => <div key={y} style={{ position: "absolute", left: 0, right: 0, top: `${y}%`, height: 1, background: "#1D4ED8" }} />)}
+          {[20, 40, 60, 80].map(x => <div key={x} style={{ position: "absolute", top: 0, bottom: 0, left: `${x}%`, width: 1, background: "#1D4ED8" }} />)}
+        </div>
+        <div style={{ position: "absolute", left: "15%", top: "20%", right: "15%", bottom: "10%", border: "2px dashed #93C5FD", borderRadius: 8, background: "rgba(255,255,255,0.25)" }} />
+        <div style={{ position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", background: "#1D4ED8", color: "#fff", fontSize: 10, padding: "2px 10px", borderRadius: 20, whiteSpace: "nowrap" }}>University Road (Main)</div>
+
+        {filtered.map(loc => (
+          <button key={loc.id}
+            onClick={() => setSelected(selected?.id === loc.id ? null : loc)}
+            style={{
+              position: "absolute", left: `${loc.x}%`, top: `${loc.y}%`, transform: "translate(-50%, -50%)",
+              background: selected?.id === loc.id ? COLORS.primary : "#fff",
+              border: `2px solid ${selected?.id === loc.id ? COLORS.primary : "#93C5FD"}`,
+              borderRadius: 8, padding: "4px 6px", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+              boxShadow: selected?.id === loc.id ? "0 4px 12px rgba(37,99,235,0.4)" : "0 2px 6px rgba(0,0,0,0.1)",
+              zIndex: selected?.id === loc.id ? 10 : 1,
+            }}>
+            <span style={{ fontSize: 16 }}>{loc.icon}</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: selected?.id === loc.id ? "#fff" : "#1D4ED8", whiteSpace: "nowrap" }}>{loc.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {selected && (
+        <div style={{ background: "#fff", border: `1.5px solid ${COLORS.primary}`, borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 24 }}>{selected.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "#111827" }}>{selected.name}</div>
+              <div style={{ fontSize: 12, color: COLORS.primary, marginBottom: 4 }}>{selected.type}</div>
+              <div style={{ fontSize: 13, color: "#6B7280" }}>{selected.desc}</div>
+            </div>
+            <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#9CA3AF" }}>×</button>
+          </div>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button style={{ flex: 1, padding: "8px", background: COLORS.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>Navigate Here</button>
+            <button style={{ flex: 1, padding: "8px", background: "#F1F5F9", color: "#374151", border: "none", borderRadius: 8, fontSize: 13, cursor: "pointer" }}>Share Location</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {filtered.map(loc => (
+          <button key={loc.id} onClick={() => setSelected(loc)}
+            style={{ display: "flex", gap: 10, alignItems: "center", padding: "10px 12px", background: "#fff", border: `1.5px solid ${selected?.id === loc.id ? COLORS.primary : "#E5E7EB"}`, borderRadius: 10, cursor: "pointer", textAlign: "left" }}>
+            <span style={{ fontSize: 18 }}>{loc.icon}</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{loc.name}</div>
+              <div style={{ fontSize: 11, color: "#9CA3AF" }}>{loc.type}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Network() {
+  const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("people");
+  const filtered = mockNetwork.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.course.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div style={{ padding: 24 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>Your Network</h2>
+      <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>Connect with classmates and build your professional network</p>
+
+      <input value={search} onChange={e => setSearch(e.target.value)}
+        placeholder="Search by name or course…"
+        style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #E5E7EB", borderRadius: 10, fontSize: 14, marginBottom: 14, boxSizing: "border-box", outline: "none" }}
+      />
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {["people", "courses", "alumni"].map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            style={{ padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 500, border: `1.5px solid ${tab === t ? COLORS.primary : "#E5E7EB"}`, background: tab === t ? COLORS.primary : "#fff", color: tab === t ? "#fff" : "#374151", cursor: "pointer", textTransform: "capitalize" }}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === "people" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtered.map(p => {
+            const colors = ["#EFF6FF", "#F0FDF4", "#FDF4FF", "#FFF7ED", "#FEF2F2"];
+            const tcs = ["#1D4ED8", "#15803D", "#7E22CE", "#C2410C", "#B91C1C"];
+            const ci = p.id % colors.length;
+            return (
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12 }}>
+                <div style={{ position: "relative" }}>
+                  <Avatar initials={p.avatar} size={42} color={colors[ci]} textColor={tcs[ci]} />
+                  <div style={{ position: "absolute", bottom: 0, right: 0, width: 12, height: 12, borderRadius: "50%", background: { online: "#10B981", offline: "#9CA3AF", away: "#F59E0B" }[p.status], border: "2px solid #fff" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>{p.course} · {p.year}</div>
+                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{p.mutuals} mutual connections</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <button style={{ padding: "5px 12px", background: COLORS.primary, color: "#fff", border: "none", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>Connect</button>
+                  <button style={{ padding: "5px 12px", background: "#F1F5F9", color: "#374151", border: "none", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>Message</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab === "courses" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {["Data Structures", "Computer Networks", "DBMS", "Operating Systems", "Algorithms"].map(c => (
+            <div key={c} style={{ padding: "14px 16px", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#111827", marginBottom: 4 }}>{c}</div>
+              <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 10 }}>68 classmates enrolled</div>
+              <button style={{ padding: "6px 14px", background: "#EFF6FF", color: COLORS.primary, border: "none", borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>View Classmates →</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "alumni" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {[
+            { name: "Rahul Verma", role: "Software Engineer @ Google", year: "2022 Batch", avatar: "RV" },
+            { name: "Anjali Rao", role: "Product Manager @ Flipkart", year: "2021 Batch", avatar: "AR" },
+            { name: "Suresh Kumar", role: "Data Scientist @ Amazon", year: "2020 Batch", avatar: "SK" },
+          ].map(a => (
+            <div key={a.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12 }}>
+              <Avatar initials={a.avatar} size={42} color="#F3E8FF" textColor="#7E22CE" />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{a.name}</div>
+                <div style={{ fontSize: 12, color: "#6B7280" }}>{a.role}</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{a.year}</div>
+              </div>
+              <button style={{ padding: "6px 14px", background: "#F3E8FF", color: "#7E22CE", border: "none", borderRadius: 8, fontSize: 12, cursor: "pointer" }}>Connect</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SocialFeed() {
+  const [posts, setPosts] = useState(mockPosts);
+  const [newPost, setNewPost] = useState("");
+
+  const addPost = () => {
+    if (!newPost.trim()) return;
+    setPosts([{ id: Date.now(), author: mockUser.name, avatar: mockUser.avatar, time: "Just now", content: newPost, likes: 0, comments: 0, tag: "General" }, ...posts]);
+    setNewPost("");
+  };
+
+  const tagColors = { Study: ["#EFF6FF", "#1D4ED8"], Placement: ["#F0FDF4", "#15803D"], Event: ["#FDF4FF", "#7E22CE"], General: ["#F8FAFC", "#374151"] };
+
+  return (
+    <div style={{ padding: 24 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 16 }}>Campus Feed</h2>
+
+      <div style={{ background: "#fff", border: "1.5px solid #E5E7EB", borderRadius: 12, padding: 14, marginBottom: 18 }}>
+        <div style={{ display: "flex", gap: 10 }}>
+          <Avatar initials={mockUser.avatar} size={36} />
+          <textarea value={newPost} onChange={e => setNewPost(e.target.value)}
+            placeholder="Share something with your campus…"
+            rows={2}
+            style={{ flex: 1, border: "1.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 14, resize: "none", outline: "none", fontFamily: "inherit" }}
+          />
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+          <button onClick={addPost} style={{ padding: "7px 18px", background: COLORS.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>Post</button>
+        </div>
+      </div>
+
+      {posts.map(p => {
+        const [bg, tc] = tagColors[p.tag] || tagColors.General;
+        return (
+          <div key={p.id} style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+              <Avatar initials={p.avatar} size={36} color="#EFF6FF" textColor="#1D4ED8" />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{p.author}</span>
+                  <span style={{ fontSize: 11, background: bg, color: tc, padding: "2px 8px", borderRadius: 12 }}>{p.tag}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#9CA3AF" }}>{p.time}</div>
+              </div>
+            </div>
+            <p style={{ fontSize: 14, color: "#374151", margin: "0 0 12px", lineHeight: 1.5 }}>{p.content}</p>
+            <div style={{ display: "flex", gap: 16, paddingTop: 10, borderTop: "1px solid #F1F5F9" }}>
+              <button onClick={() => setPosts(posts.map(pp => pp.id === p.id ? { ...pp, likes: pp.likes + 1 } : pp))}
+                style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#6B7280", fontSize: 13, cursor: "pointer", padding: 0 }}>
+                <i className="ti ti-heart" style={{ fontSize: 16 }} /> {p.likes}
+              </button>
+              <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#6B7280", fontSize: 13, cursor: "pointer", padding: 0 }}>
+                <i className="ti ti-message-circle" style={{ fontSize: 16 }} /> {p.comments}
+              </button>
+              <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", color: "#6B7280", fontSize: 13, cursor: "pointer", padding: 0 }}>
+                <i className="ti ti-share" style={{ fontSize: 16 }} /> Share
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Timetable() {
+  const slots = ["9–10 AM", "10–11 AM", "12–2 PM", "2–4 PM", "4–5 PM"];
+  const colors = ["#EFF6FF", "#F0FDF4", "#FDF4FF", "#FFF7ED", "#ECFDF5"];
+  const tcs = ["#1D4ED8", "#15803D", "#7E22CE", "#C2410C", "#065F46"];
+
+  return (
+    <div style={{ padding: 24 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>Timetable</h2>
+      <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>5th Semester · Academic Year 2025–26</p>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: "8px 12px", background: COLORS.sidebar, color: "#fff", borderRadius: "8px 0 0 0", textAlign: "left", fontSize: 12 }}>Day</th>
+              {slots.map((s, i) => (
+                <th key={i} style={{ padding: "8px 10px", background: COLORS.sidebar, color: "#94A3B8", textAlign: "center", fontSize: 11, minWidth: 90, borderLeft: "1px solid #334155" }}>{s}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {mockTimetable.map((row, ri) => (
+              <tr key={row.day}>
+                <td style={{ padding: "10px 12px", background: ri % 2 === 0 ? "#F8FAFC" : "#fff", fontWeight: 600, color: "#374151", borderBottom: "1px solid #E5E7EB" }}>{row.day}</td>
+                {row.slots.map((s, si) => (
+                  <td key={si} style={{ padding: "8px", background: ri % 2 === 0 ? "#F8FAFC" : "#fff", textAlign: "center", borderBottom: "1px solid #E5E7EB", borderLeft: "1px solid #F1F5F9" }}>
+                    {s !== "—" ? (
+                      <div style={{ background: colors[si % colors.length], borderRadius: 6, padding: "5px 6px" }}>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: tcs[si % tcs.length], lineHeight: 1.3 }}>{s}</div>
+                      </div>
+                    ) : <span style={{ color: "#D1D5DB", fontSize: 16 }}>—</span>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Results() {
+  const total = mockResults.reduce((s, r) => s + r.total, 0);
+  const max = mockResults.length * 100;
+  const pct = Math.round((total / max) * 100);
+
+  return (
+    <div style={{ padding: 24 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 4 }}>Academic Results</h2>
+      <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 16 }}>Semester 4 · Final Grades</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+        {[
+          { label: "Total Marks", value: `${total}/${max}`, color: "#EFF6FF", tc: "#1D4ED8" },
+          { label: "Percentage", value: `${pct}%`, color: "#F0FDF4", tc: "#15803D" },
+          { label: "CGPA", value: mockUser.cgpa, color: "#FDF4FF", tc: "#7E22CE" },
+        ].map(c => (
+          <div key={c.label} style={{ background: c.color, borderRadius: 10, padding: "12px 14px", textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: c.tc }}>{c.value}</div>
+            <div style={{ fontSize: 11, color: c.tc, opacity: 0.75 }}>{c.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {mockResults.map(r => {
+        const pct = Math.round((r.total / 100) * 100);
+        const gradeColor = { "A+": ["#F0FDF4", "#15803D"], "A": ["#EFF6FF", "#1D4ED8"], "B+": ["#FFFBEB", "#B45309"] };
+        const [gbg, gtc] = gradeColor[r.grade] || ["#F8FAFC", "#374151"];
+        return (
+          <div key={r.subject} style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{r.subject}</div>
+                <div style={{ fontSize: 12, color: "#9CA3AF" }}>Internal: {r.internal}/30 · External: {r.external}/70</div>
+              </div>
+              <span style={{ background: gbg, color: gtc, fontWeight: 700, fontSize: 15, padding: "4px 12px", borderRadius: 8 }}>{r.grade}</span>
+            </div>
+            <div style={{ background: "#F1F5F9", borderRadius: 6, height: 8, overflow: "hidden" }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: pct >= 90 ? "#10B981" : pct >= 75 ? "#2563EB" : "#F59E0B", borderRadius: 6, transition: "width 0.6s ease" }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+              <span style={{ fontSize: 11, color: "#9CA3AF" }}>Total: {r.total}/100</span>
+              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{pct}%</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const JMI_URL = "https://mj.jmi.ac.in/";
+const JMI_LOGIN = "https://mj.jmi.ac.in/";
+
+function UniversityPortal() {
+  const [expanded, setExpanded] = useState(null);
+
+  const portalSections = [
+    {
+      id: "examination",
+      icon: "📋",
+      title: "Examination",
+      color: "#EFF6FF", tc: "#1D4ED8",
+      items: [
+        { label: "Examination Form Registration", url: JMI_URL },
+        { label: "Grade Card", url: JMI_URL },
+      ],
+    },
+    {
+      id: "curricular",
+      icon: "📚",
+      title: "Curricular",
+      color: "#F0FDF4", tc: "#15803D",
+      items: [
+        { label: "View Attendance", url: JMI_URL },
+        { label: "Course Registration", url: JMI_URL },
+        { label: "Feedback Recording", url: JMI_URL },
+      ],
+    },
+    {
+      id: "fee",
+      icon: "💳",
+      title: "Fee",
+      color: "#FFFBEB", tc: "#B45309",
+      items: [
+        { label: "Download Fee Slip", url: JMI_URL },
+        { label: "Fee Payment", url: JMI_URL },
+        { label: "Download Fee Slips", url: JMI_URL },
+        { label: "Make Fee Payment", url: JMI_URL },
+      ],
+    },
+    {
+      id: "complaint",
+      icon: "📞",
+      title: "Complaint / Services",
+      color: "#FDF4FF", tc: "#7E22CE",
+      items: [
+        { label: "Internet Account Registration Request", url: JMI_URL },
+        { label: "EMail Account Registration Request", url: JMI_URL },
+        { label: "Complaint Registration", url: JMI_URL },
+        { label: "Internet / JMI E-Mail Account", url: JMI_URL },
+      ],
+    },
+    {
+      id: "hostel",
+      icon: "🏠",
+      title: "Hostel",
+      color: "#FEF2F2", tc: "#B91C1C",
+      items: [
+        { label: "Hostel Registration", url: JMI_URL },
+      ],
+    },
+  ];
+
+  const importantLinks = [
+    { label: "JMI Website Portal", url: "https://jmi.ac.in" },
+    { label: "Examinations Portal", url: JMI_URL },
+    { label: "Dr. Zakir Husain Library Portal", url: JMI_URL },
+    { label: "JMI Events Management Portal", url: JMI_URL },
+    { label: "IQAC Portal", url: JMI_URL },
+    { label: "JTA Portal", url: JMI_URL },
+  ];
+
+  const notices = [
+    "Click here to check Datesheet/Scheme for even semester examination for session 2025-26",
+    "Click here to check notice",
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+
+      <div style={{ background: "linear-gradient(135deg, #0F4C81 0%, #1a6eb5 100%)", borderRadius: 14, padding: "18px 20px", marginBottom: 16, color: "#fff" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 8, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🏛️</div>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Jamia Millia Islamia</h2>
+            <p style={{ fontSize: 12, color: "#BAD6F5", margin: 0 }}>A Central University · NAAC Accredited A++ Grade</p>
+          </div>
+        </div>
+        <p style={{ fontSize: 12, color: "#BAD6F5", margin: "0 0 12px", lineHeight: 1.5 }}>
+          MyJamia Portal — access all student services. Tap any section to expand, then open on the portal.
+        </p>
+        <a href={JMI_LOGIN} target="_blank" rel="noreferrer"
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", color: "#0F4C81", padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+          <i className="ti ti-external-link" style={{ fontSize: 14 }} /> Open MyJamia Portal
+        </a>
+      </div>
+
+      <div style={{ background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#C2410C", marginBottom: 6 }}>📢 Notices</div>
+        {notices.map((n, i) => (
+          <a key={i} href={JMI_URL} target="_blank" rel="noreferrer"
+            style={{ display: "flex", alignItems: "flex-start", gap: 6, padding: "5px 0", borderBottom: i < notices.length - 1 ? "1px solid #FED7AA" : "none", textDecoration: "none" }}>
+            <span style={{ color: "#EA580C", fontSize: 12, marginTop: 1 }}>→</span>
+            <span style={{ fontSize: 12, color: "#C2410C", lineHeight: 1.4 }}>{n}</span>
+          </a>
+        ))}
+      </div>
+
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10 }}>Student Services</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+        {portalSections.map(sec => (
+          <div key={sec.id} style={{ background: "#fff", border: `1.5px solid ${expanded === sec.id ? COLORS.primary : "#E5E7EB"}`, borderRadius: 12, overflow: "hidden" }}>
+            <button onClick={() => setExpanded(expanded === sec.id ? null : sec.id)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: sec.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{sec.icon}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{sec.title}</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{sec.items.length} service{sec.items.length > 1 ? "s" : ""}</div>
+              </div>
+              <i className={`ti ${expanded === sec.id ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ fontSize: 16, color: "#9CA3AF" }} />
+            </button>
+            {expanded === sec.id && (
+              <div style={{ borderTop: "1px solid #F1F5F9", padding: "8px 0" }}>
+                {sec.items.map((item, idx) => (
+                  <a key={idx} href={item.url} target="_blank" rel="noreferrer"
+                    style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", textDecoration: "none", borderBottom: idx < sec.items.length - 1 ? "1px solid #F8FAFC" : "none" }}>
+                    <span style={{ fontSize: 13, color: "#374151" }}>{item.label}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: COLORS.primary, fontWeight: 500, flexShrink: 0 }}>
+                      Open <i className="ti ti-external-link" style={{ fontSize: 12 }} />
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 10 }}>🔗 Important Links</div>
+      <div style={{ background: "#EFF6FF", borderRadius: 12, padding: "4px 0", marginBottom: 12 }}>
+        {importantLinks.map((l, i) => (
+          <a key={l.label} href={l.url} target="_blank" rel="noreferrer"
+            style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderBottom: i < importantLinks.length - 1 ? "1px solid #DBEAFE" : "none", textDecoration: "none" }}>
+            <span style={{ fontSize: 13, color: "#1E40AF" }}>{l.label}</span>
+            <i className="ti ti-external-link" style={{ fontSize: 13, color: "#2563EB" }} />
+          </a>
+        ))}
+      </div>
+
+      <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+        <span style={{ fontSize: 15 }}>ℹ️</span>
+        <p style={{ fontSize: 12, color: "#15803D", margin: 0, lineHeight: 1.5 }}>
+          All services redirect to <strong>mj.jmi.ac.in</strong>. Sign in with your JMI Student ID and password, or use <strong>ePramaan</strong> to authenticate.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ─────────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [activeScreen, setActiveScreen] = useState("dashboard");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  if (!loggedIn) return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+
+  const screens = { dashboard: <Dashboard user={mockUser} />, campus: <CampusMap />, network: <Network />, social: <SocialFeed />, timetable: <Timetable />, results: <Results />, university: <UniversityPortal /> };
+  const current = navItems.find(n => n.id === activeScreen);
+
+  return (
+    <div style={{ minHeight: "100vh", background: COLORS.bg, display: "flex", flexDirection: "column" }}>
+      <div style={{ background: COLORS.sidebar, padding: "0 20px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 20 }}>🎓</span>
+          <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>UniCampus</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ position: "relative" }}>
+            <button style={{ background: "none", border: "none", cursor: "pointer", color: "#94A3B8", fontSize: 20, padding: 0 }}>
+              <i className="ti ti-bell" />
+            </button>
+            <span style={{ position: "absolute", top: -2, right: -4, width: 8, height: 8, background: COLORS.danger, borderRadius: "50%" }} />
+          </div>
+          <Avatar initials={mockUser.avatar} size={30} color="#2563EB" />
+        </div>
+      </div>
+
+      <div style={{ flex: 1, maxWidth: 680, width: "100%", margin: "0 auto", paddingBottom: 80 }}>
+        {screens[activeScreen]}
+      </div>
+
+      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 680, background: "#fff", borderTop: "1px solid #E5E7EB", padding: "8px 8px 12px", display: "flex", justifyContent: "space-around", zIndex: 100 }}>
+        {navItems.map(item => (
+          <button key={item.id} onClick={() => setActiveScreen(item.id)}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", padding: "4px 6px", borderRadius: 8, flex: 1 }}>
+            <i className={`ti ${item.icon}`} style={{ fontSize: 20, color: activeScreen === item.id ? COLORS.primary : "#9CA3AF" }} />
+            <span style={{ fontSize: 10, color: activeScreen === item.id ? COLORS.primary : "#9CA3AF", fontWeight: activeScreen === item.id ? 600 : 400 }}>
+              {item.label.split(" ")[0]}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
